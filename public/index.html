@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Морской Бой — В тетрадке в клетку</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Neucha&family=Chakra+Petch:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Контейнер для анимации летящего снаряда -->
+  <div id="projectile-layer" class="projectile-layer"></div>
+
+  <div class="notebook-wrapper">
+    <!-- Тетрадный лист с полями -->
+    <div class="notebook-sheet">
+      <!-- Красные поля тетради -->
+      <div class="notebook-margin-line"></div>
+
+      <!-- Верхняя шапка тетрадки -->
+      <header class="notebook-header">
+        <div class="header-title-box">
+          <span class="pen-icon">⚓</span>
+          <div class="header-text">
+            <h1 class="handwritten-title">Морской Бой</h1>
+            <span class="notebook-subtitle">тетрадь в клеточку 10×10 • 2026 г.</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <div id="room-badge" class="notebook-badge hidden">
+            <span class="badge-ink-dot"></span>
+            <span id="badge-text">Комната: ----</span>
+          </div>
+          <div class="zoom-controls">
+            <button id="btn-zoom-out" class="sketch-btn icon-btn" title="Уменьшить масштаб">-</button>
+            <button id="btn-zoom-fit" class="sketch-btn btn-sm" title="Авто-масштаб под экран">Экран</button>
+            <button id="btn-zoom-in" class="sketch-btn icon-btn" title="Увеличить масштаб">+</button>
+          </div>
+          <button id="btn-sound" class="sketch-btn icon-btn" title="Звуки игры">
+            <span id="sound-icon">🔊</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Экран 1: Главное меню / Лобби -->
+      <section id="screen-lobby" class="screen active">
+        <div class="lobby-content">
+          <div class="notebook-card hero-card">
+            <div class="stamp-badge">СОВЕРШЕННО СЕКРЕТНО</div>
+            <h2 class="hero-quote">«На последней парте на уроке геометрии...»</h2>
+            <p class="hero-desc">Классический морской бой ручкой на тетрадном листе. Создайте комнату, отправьте ссылку однокласснику или проверьте тактику против бота!</p>
+            
+            <div class="player-input-wrap">
+              <label for="player-name-input">Ваш позывной в тетрадке:</label>
+              <input type="text" id="player-name-input" maxlength="20" placeholder="Адмирал" value="Адмирал" class="sketch-input">
+            </div>
+          </div>
+
+          <div class="modes-grid">
+            <!-- Режим: Создать игру -->
+            <div class="notebook-card mode-box primary-mode">
+              <div class="mode-ribbon">СЕТЬ</div>
+              <h3>Создать игру</h3>
+              <p>Создайте новую тетрадную дуэль и отправьте ссылку второму игроку.</p>
+              <button id="btn-create-room" class="sketch-btn btn-primary btn-block">
+                <span class="btn-icon">🌐</span> Создать комнату
+              </button>
+            </div>
+
+            <!-- Режим: Присоединиться -->
+            <div class="notebook-card mode-box">
+              <div class="mode-ribbon">ПО ССЫЛКЕ</div>
+              <h3>Войти в игру</h3>
+              <p>Введите код тетрадной комнаты от друга:</p>
+              <div class="join-inline">
+                <input type="text" id="join-code-input" placeholder="КОД (напр. NAVY-123)" class="sketch-input" uppercase>
+                <button id="btn-join-room" class="sketch-btn btn-secondary">Войти</button>
+              </div>
+            </div>
+
+            <!-- Режим: Против бота -->
+            <div class="notebook-card mode-box bot-mode">
+              <div class="mode-ribbon">ОДИНОЧНАЯ</div>
+              <h3>Игра против Бота</h3>
+              <p>Размеренная партия против школьного гроссмейстера.</p>
+              <button id="btn-play-bot" class="sketch-btn btn-bot btn-block">
+                <span class="btn-icon">🤖</span> Играть с Ботом
+              </button>
+            </div>
+          </div>
+
+          <!-- Справка по флоту на полях -->
+          <div class="notebook-card rules-card">
+            <h4>📏 Состав эскадры по правилам:</h4>
+            <div class="rules-fleet-preview">
+              <span class="rule-ship">1 × Линкор (4 кл.)</span>
+              <span class="rule-ship">2 × Крейсера (3 кл.)</span>
+              <span class="rule-ship">3 × Эсминца (2 кл.)</span>
+              <span class="rule-ship">4 × Катера (1 кл.)</span>
+            </div>
+            <p class="rule-note">⚠️ Корабли не должны соприкасаться ни бортами, ни углами (дистанция минимум 1 клетка). При попадании — стреляете снова!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Экран 2: Расстановка флота -->
+      <section id="screen-placement" class="screen">
+        <div class="placement-topbar">
+          <div class="code-pill">
+            <span class="pill-label">КОД ТЕТРАДИ:</span>
+            <span id="current-room-code" class="pill-code">----</span>
+            <button id="btn-copy-link" class="sketch-btn btn-sm" title="Скопировать ссылку для друга">
+              🔗 Скопировать ссылку
+            </button>
+            <span id="copy-toast" class="ink-toast hidden">Ссылка скопирована!</span>
+          </div>
+
+          <div class="opponent-badge">
+            <span class="pencil-dot"></span>
+            <span id="placement-opponent-status">Ожидание соперника...</span>
+          </div>
+        </div>
+
+        <div class="placement-area">
+          <!-- Тетрадная сетка расстановки -->
+          <div class="board-container">
+            <div class="board-caption">
+              <h3>Ваша половина тетради</h3>
+              <span class="caption-sub">Нарисуйте все 10 кораблей</span>
+            </div>
+
+            <div class="grid-sheet-wrapper">
+              <div id="placement-grid" class="paper-grid"></div>
+            </div>
+
+            <div class="placement-controls">
+              <button id="btn-rotate" class="sketch-btn">
+                🔄 Поворот (<span id="rotate-label">Горизонт</span>) [R]
+              </button>
+              <button id="btn-randomize" class="sketch-btn">
+                🎲 Случайно
+              </button>
+              <button id="btn-clear-fleet" class="sketch-btn">
+                🧹 Стереть ластиком
+              </button>
+              <button id="btn-confirm-ready" class="sketch-btn btn-go" disabled>
+                ⚔️ В БОЙ! ГОТОВ
+              </button>
+            </div>
+          </div>
+
+          <!-- Док кораблей (записная книжка эскадры) -->
+          <div class="dock-container notebook-card">
+            <h3>Флот в доке</h3>
+            <p class="dock-instruction">Кликните на корабль, затем кликните по клетке поля:</p>
+            <div id="dock-ship-list" class="dock-ship-list">
+              <!-- Заполняется динамически -->
+            </div>
+            <div class="dock-counter">
+              Готово: <strong id="placed-count">0</strong> / 10 кораблей
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Экран 3: Боевая арена (Две страницы тетрадки) -->
+      <section id="screen-battle" class="screen">
+        <!-- Анимированный баннер хода -->
+        <div id="turn-banner" class="battle-turn-banner your-turn">
+          <div class="turn-lamp"></div>
+          <div class="turn-texts">
+            <h2 id="turn-headline" class="turn-title">ВАШ ХОД!</h2>
+            <span id="turn-subtext" class="turn-sub">Выберите клетку на поле противника и произведите залп</span>
+          </div>
+        </div>
+
+        <!-- Поля сражения: страница игрока и страница противника -->
+        <div class="battle-spread">
+          <!-- Левая страница: Ваш флот -->
+          <div class="battle-page my-page">
+            <div class="page-header">
+              <span class="page-title" id="my-name-display">Ваш флот</span>
+              <span class="alive-counter">Живых: <strong id="my-ships-alive">10</strong> / 10</span>
+            </div>
+            <div class="grid-sheet-wrapper">
+              <div id="my-battle-grid" class="paper-grid my-grid"></div>
+            </div>
+            <div id="my-fleet-status" class="fleet-chips"></div>
+          </div>
+
+          <!-- Разделитель страниц тетрадки -->
+          <div class="notebook-spine">
+            <div class="spine-clip"></div>
+            <div class="spine-clip"></div>
+            <div class="spine-clip"></div>
+          </div>
+
+          <!-- Правая страница: Радар противника -->
+          <div class="battle-page enemy-page">
+            <div class="page-header">
+              <span class="page-title" id="opponent-name-display">Флот противника</span>
+              <span class="alive-counter">Живых: <strong id="opponent-ships-alive">10</strong> / 10</span>
+            </div>
+            <div class="grid-sheet-wrapper enemy-grid-wrapper">
+              <div id="radar-grid" class="paper-grid radar-grid"></div>
+            </div>
+            <div id="opponent-fleet-status" class="fleet-chips"></div>
+          </div>
+        </div>
+
+        <!-- Нижняя консоль: бортовой журнал и записки на полях -->
+        <div class="battle-footer">
+          <div class="notebook-log notebook-card">
+            <div class="log-title">✏️ Записи на полях:</div>
+            <div id="log-messages" class="log-entries">
+              <div class="log-entry system">Тетради открыты. Капитаны готовы к бою!</div>
+            </div>
+          </div>
+
+          <div class="notebook-reactions notebook-card">
+            <span class="react-label">Записка:</span>
+            <div class="react-emojis">
+              <button class="sketch-btn emoji-btn" data-emoji="🎯">🎯</button>
+              <button class="sketch-btn emoji-btn" data-emoji="💥">💥</button>
+              <button class="sketch-btn emoji-btn" data-emoji="🌊">🌊</button>
+              <button class="sketch-btn emoji-btn" data-emoji="🚢">🚢</button>
+              <button class="sketch-btn emoji-btn" data-emoji="🫡">🫡</button>
+              <button class="sketch-btn emoji-btn" data-emoji="✏️">✏️</button>
+              <button class="sketch-btn emoji-btn" data-emoji="😎">😎</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модальное окно победы/поражения -->
+      <div id="modal-gameover" class="modal-overlay hidden">
+        <div class="diary-card">
+          <div id="gameover-banner" class="diary-banner victory">
+            <div id="gameover-icon" class="diary-icon">🏆</div>
+            <h2 id="gameover-title">ОТЛИЧНО! ПОБЕДА!</h2>
+            <p id="gameover-subtitle">Вы потопили всю эскадру соперника до последнего катера!</p>
+          </div>
+
+          <div class="diary-stats">
+            <div class="diary-stat-row">
+              <span>Сделано выстрелов:</span>
+              <strong id="stat-shots">0</strong>
+            </div>
+            <div class="diary-stat-row">
+              <span>Точных попаданий:</span>
+              <strong id="stat-hits">0</strong>
+            </div>
+            <div class="diary-stat-row">
+              <span>Меткость залпов:</span>
+              <strong id="stat-acc">0%</strong>
+            </div>
+          </div>
+
+          <div id="rematch-status" class="rematch-note hidden">
+            Соперник предлагает реванш!
+          </div>
+
+          <div class="diary-actions">
+            <button id="btn-rematch" class="sketch-btn btn-go">
+              🔄 Сыграть снова
+            </button>
+            <button id="btn-back-menu" class="sketch-btn">
+              Главное меню
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Всплывающие записки реакций -->
+      <div id="reaction-toast-container" class="reaction-toast-container"></div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="audio.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>

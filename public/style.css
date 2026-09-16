@@ -1,0 +1,1177 @@
+/* 
+  Морской Бой — Тетрадь в клеточку
+  Стилистика школьной тетради, рисунков синей и красной ручкой и простым карандашом
+*/
+
+:root {
+  --ink-blue: #123985;
+  --ink-blue-light: #2b5cb8;
+  --ink-blue-faint: rgba(18, 57, 133, 0.08);
+  --ink-red: #c92a2a;
+  --ink-red-glow: rgba(201, 42, 42, 0.25);
+  --pencil-lead: #373b42;
+  --pencil-light: #6a717c;
+  --paper-bg: #faf8f5;
+  --paper-white: #ffffff;
+  --grid-line: #c8daf0;
+  --margin-red: #e04b50;
+  
+  --cell-size: 32px;
+  --sketch-border: 2px solid var(--ink-blue);
+  --sketch-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: #e5e9f0;
+  background-image: 
+    radial-gradient(#cbd5e1 1px, transparent 1px),
+    linear-gradient(#f1f5f9 1px, transparent 1px);
+  background-size: 20px 20px, 40px 40px;
+  color: var(--ink-blue);
+  font-family: 'Neucha', cursive, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 8px;
+  font-size: 15px;
+}
+
+/* Оверлей для анимации полета снаряда */
+.projectile-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.flying-shell {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10000;
+  transition: transform 0.05s linear;
+}
+
+.shell-shadow {
+  position: absolute;
+  width: 18px;
+  height: 8px;
+  background: rgba(43, 50, 64, 0.22);
+  border-radius: 50%;
+  filter: blur(1.5px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Оболочка тетради */
+.notebook-wrapper {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  transition: height 0.2s ease;
+}
+
+.notebook-sheet {
+  background-color: var(--paper-bg);
+  background-image: 
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: var(--cell-size) var(--cell-size);
+  border: 2px solid #b2c7e0;
+  border-radius: 10px;
+  box-shadow: 
+    0 8px 24px rgba(0, 30, 80, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    inset 0 0 30px rgba(230, 225, 210, 0.4);
+  padding: 14px 24px 18px 46px;
+  position: relative;
+  width: 100%;
+  transform-origin: top center;
+  transition: transform 0.15s ease-out;
+}
+
+/* Красные поля школьной тетради */
+.notebook-margin-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 36px;
+  width: 2px;
+  background: var(--margin-red);
+  box-shadow: 1px 0 0 rgba(224, 75, 80, 0.3);
+  pointer-events: none;
+}
+
+/* Шапка тетради */
+.notebook-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px dashed #b8cde6;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+}
+
+.header-title-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pen-icon {
+  font-size: 28px;
+  filter: drop-shadow(2px 2px 0px rgba(18, 57, 133, 0.15));
+}
+
+.handwritten-title {
+  font-family: 'Caveat', cursive;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink-blue);
+  line-height: 1;
+}
+
+.notebook-subtitle {
+  font-size: 13px;
+  color: var(--pencil-light);
+  font-style: italic;
+  display: block;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notebook-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 3px 12px;
+  background: #fff;
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius);
+  box-shadow: 2px 2px 0px var(--ink-blue);
+}
+
+.badge-ink-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--ink-blue);
+  border-radius: 50%;
+  animation: pulseDot 2s infinite;
+}
+
+/* Рукописные карточки и кнопки */
+.notebook-card {
+  background: var(--paper-white);
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius);
+  box-shadow: 3px 3px 0px rgba(18, 57, 133, 0.18);
+  padding: 16px;
+  position: relative;
+}
+
+.sketch-btn {
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-blue);
+  background: #ffffff;
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius);
+  box-shadow: 2px 2px 0px var(--ink-blue);
+  padding: 6px 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+
+.sketch-btn:hover:not(:disabled) {
+  background: #f0f6ff;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--ink-blue);
+}
+
+.sketch-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--ink-blue);
+}
+
+.sketch-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: 1px 1px 0px var(--ink-blue);
+}
+
+.btn-primary {
+  background: #eef5ff;
+  color: var(--ink-blue);
+}
+
+.btn-secondary {
+  background: #ffffff;
+}
+
+.btn-bot {
+  background: #fff9e6;
+  border-color: #8c6800;
+  color: #8c6800;
+  box-shadow: 2px 2px 0px #8c6800;
+}
+
+.btn-go {
+  background: #e6fcf5;
+  border-color: #087f5b;
+  color: #087f5b;
+  box-shadow: 2px 2px 0px #087f5b;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-sm {
+  font-size: 15px;
+  padding: 3px 10px;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 18px;
+}
+
+.sketch-input {
+  font-family: 'Caveat', cursive;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink-blue);
+  background: #fff;
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius);
+  padding: 6px 12px;
+}
+
+.sketch-input:focus {
+  outline: none;
+  background: #fafcff;
+  border-color: var(--ink-blue-light);
+  box-shadow: 0 0 5px rgba(43, 92, 184, 0.3);
+}
+
+.screen {
+  display: none;
+  animation: pageTurn 0.25s ease;
+}
+
+.screen.active {
+  display: block;
+}
+
+@keyframes pageTurn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Screen 1: Лобби */
+.lobby-content {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.hero-card {
+  text-align: center;
+  margin-bottom: 16px;
+  background: #ffffff;
+  padding: 18px 24px;
+}
+
+.stamp-badge {
+  display: inline-block;
+  font-family: 'Caveat', cursive;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-red);
+  border: 2px solid var(--ink-red);
+  border-radius: 6px;
+  padding: 2px 8px;
+  transform: rotate(-3deg);
+  margin-bottom: 8px;
+}
+
+.hero-quote {
+  font-family: 'Caveat', cursive;
+  font-size: 28px;
+  color: var(--ink-blue);
+  margin-bottom: 6px;
+}
+
+.hero-desc {
+  font-size: 16px;
+  color: var(--pencil-lead);
+  max-width: 600px;
+  margin: 0 auto 12px;
+  line-height: 1.35;
+}
+
+.player-input-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.player-input-wrap label {
+  font-family: 'Caveat', cursive;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.modes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.mode-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px;
+}
+
+.mode-ribbon {
+  font-family: 'Caveat', cursive;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pencil-light);
+  border-bottom: 1px dashed #c0d4ea;
+  padding-bottom: 2px;
+  margin-bottom: 6px;
+}
+
+.mode-box h3 {
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.mode-box p {
+  font-size: 14px;
+  color: var(--pencil-lead);
+  line-height: 1.3;
+  margin-bottom: 12px;
+  flex: 1;
+}
+
+.join-inline {
+  display: flex;
+  gap: 6px;
+}
+
+.join-inline input {
+  width: 100%;
+  text-transform: uppercase;
+}
+
+.rules-card {
+  background: #fdfdfa;
+  border-style: dashed;
+  padding: 12px 18px;
+}
+
+.rules-card h4 {
+  font-family: 'Caveat', cursive;
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.rules-fleet-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.rule-ship {
+  background: #edf4fc;
+  border: 1px solid #b8d2eb;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rule-note {
+  font-size: 13px;
+  color: var(--ink-red);
+}
+
+/* Screen 2: Расстановка */
+.placement-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius);
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  box-shadow: 2px 2px 0px rgba(18, 57, 133, 0.15);
+}
+
+.code-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pill-label {
+  font-family: 'Caveat', cursive;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.pill-code {
+  font-family: 'Caveat', cursive;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink-blue);
+  background: #eef5ff;
+  border: 1px dashed var(--ink-blue);
+  padding: 1px 8px;
+  border-radius: 4px;
+}
+
+.ink-toast {
+  font-family: 'Caveat', cursive;
+  font-size: 16px;
+  color: #087f5b;
+  font-weight: 700;
+}
+
+.opponent-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  color: var(--ink-red);
+}
+
+.pencil-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--ink-red);
+  border-radius: 50%;
+  animation: pulseDot 1.5s infinite;
+}
+
+.placement-area {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.board-caption {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.board-caption h3 {
+  font-family: 'Caveat', cursive;
+  font-size: 24px;
+}
+
+.caption-sub {
+  font-size: 13px;
+  color: var(--pencil-light);
+}
+
+.grid-sheet-wrapper {
+  background: #ffffff;
+  border: 2px solid var(--ink-blue);
+  box-shadow: 
+    2px 3px 0px rgba(18, 57, 133, 0.25),
+    inset 0 0 8px rgba(200, 220, 240, 0.2);
+  border-radius: 4px;
+  padding: 2px;
+  position: relative;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.paper-grid {
+  display: grid;
+  grid-template-columns: 22px repeat(10, var(--cell-size));
+  grid-template-rows: 22px repeat(10, var(--cell-size));
+  gap: 0px;
+  user-select: none;
+  position: relative;
+}
+
+.grid-header-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Caveat', cursive;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-blue);
+}
+
+.cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+  border: 1px solid #bdd3ea;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+}
+
+.cell:hover:not(.shot):not(.hit):not(.miss):not(.sunk) {
+  background: rgba(43, 92, 184, 0.12);
+}
+
+.cell.preview-valid {
+  background: rgba(8, 127, 91, 0.28) !important;
+  border-color: #087f5b !important;
+}
+
+.cell.preview-invalid {
+  background: rgba(201, 42, 42, 0.3) !important;
+  border-color: var(--ink-red) !important;
+}
+
+.cell.ship {
+  background: #dbeefd;
+}
+
+.drawn-ship-overlay {
+  position: absolute;
+  pointer-events: none;
+  z-index: 10;
+  filter: drop-shadow(1px 2px 2px rgba(18, 57, 133, 0.2));
+}
+
+.drawn-ship-overlay svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.placement-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 420px;
+}
+
+.dock-container {
+  width: 290px;
+  padding: 14px;
+}
+
+.dock-container h3 {
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.dock-instruction {
+  font-size: 13px;
+  color: var(--pencil-lead);
+  margin-bottom: 10px;
+}
+
+.dock-ship-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.dock-ship-card {
+  background: #fdfefe;
+  border: 1.5px solid var(--ink-blue);
+  border-radius: var(--sketch-radius);
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.dock-ship-card:hover:not(.placed) {
+  background: #eef5ff;
+  transform: translateX(2px);
+}
+
+.dock-ship-card.selected {
+  background: #e1effe;
+  border-color: var(--ink-blue);
+  box-shadow: 2px 2px 0px var(--ink-blue);
+}
+
+.dock-ship-card.placed {
+  opacity: 0.4;
+  background: #f4f6f9;
+  border-style: dashed;
+  cursor: default;
+}
+
+.dock-ship-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.dock-ship-title {
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.dock-ship-size {
+  font-size: 11px;
+  color: var(--pencil-light);
+}
+
+.dock-ship-preview {
+  height: 22px;
+  display: flex;
+  align-items: center;
+}
+
+.dock-counter {
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  text-align: center;
+  border-top: 1px dashed #b8cde6;
+  padding-top: 8px;
+}
+
+.dock-counter strong {
+  font-size: 22px;
+  color: #087f5b;
+}
+
+/* Screen 3: Боевая арена */
+.battle-turn-banner {
+  max-width: 860px;
+  margin: 0 auto 12px;
+  background: #fff;
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius);
+  box-shadow: 2px 3px 0px var(--ink-blue);
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.25s ease;
+}
+
+.battle-turn-banner.your-turn {
+  background: #f0fdf4;
+  border-color: #087f5b;
+  box-shadow: 2px 3px 0px #087f5b;
+}
+
+.battle-turn-banner.opponent-turn {
+  background: #fff8f8;
+  border-color: var(--ink-red);
+  box-shadow: 2px 3px 0px var(--ink-red);
+}
+
+.turn-lamp {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.your-turn .turn-lamp {
+  background: #087f5b;
+  box-shadow: 0 0 8px rgba(8, 127, 91, 0.5);
+  animation: pulseDot 1s infinite;
+}
+
+.opponent-turn .turn-lamp {
+  background: var(--ink-red);
+  box-shadow: 0 0 8px rgba(201, 42, 42, 0.5);
+  animation: pulseDot 1.5s infinite;
+}
+
+.turn-title {
+  font-family: 'Caveat', cursive;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.your-turn .turn-title {
+  color: #087f5b;
+}
+
+.opponent-turn .turn-title {
+  color: var(--ink-red);
+}
+
+.turn-sub {
+  font-size: 14px;
+  color: var(--pencil-lead);
+}
+
+.battle-spread {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.battle-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius);
+  box-shadow: 2px 3px 0px rgba(18, 57, 133, 0.2);
+  padding: 12px 16px;
+}
+
+.page-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  border-bottom: 1px dashed #c0d4ea;
+  padding-bottom: 4px;
+}
+
+.page-title {
+  font-family: 'Caveat', cursive;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.alive-counter {
+  font-size: 13px;
+  color: var(--pencil-light);
+}
+
+.alive-counter strong {
+  font-size: 17px;
+  color: var(--ink-blue);
+  font-family: 'Caveat', cursive;
+}
+
+.notebook-spine {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  height: 350px;
+}
+
+.spine-clip {
+  width: 14px;
+  height: 24px;
+  border: 2.5px solid #8fa5c2;
+  border-radius: 10px;
+  background: #eef3f9;
+}
+
+.fleet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  max-width: 350px;
+  margin-top: 6px;
+}
+
+.chip {
+  font-family: 'Caveat', cursive;
+  font-size: 13px;
+  padding: 1px 6px;
+  background: #f0f6ff;
+  border: 1px solid #b8d2eb;
+  border-radius: 4px;
+  color: var(--ink-blue);
+}
+
+.chip.sunk {
+  background: #fff0f0;
+  border-color: var(--ink-red);
+  color: var(--ink-red);
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+
+/* Клетки попаданий/промахов */
+.cell.miss {
+  cursor: default;
+}
+
+.cell.miss::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: var(--ink-blue);
+  border-radius: 50%;
+  animation: inkDrop 0.2s ease-out;
+}
+
+.cell.hit {
+  background: #fff2f2 !important;
+  cursor: default;
+}
+
+.cell.hit::after {
+  content: '✕';
+  color: var(--ink-red);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  animation: drawCross 0.25s ease-out;
+}
+
+.cell.sunk {
+  background: #ffe3e3 !important;
+  cursor: default;
+}
+
+.cell.sunk::after {
+  content: '✕';
+  color: #900;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.cell.halo {
+  cursor: default;
+}
+
+.cell.halo::after {
+  content: '';
+  width: 4.5px;
+  height: 4.5px;
+  background: #6a88b0;
+  border-radius: 50%;
+  animation: fadeInDot 0.15s ease-out;
+}
+
+.cell.targeted {
+  background: rgba(201, 42, 42, 0.15) !important;
+}
+
+.cell.targeted::before {
+  content: '🎯';
+  font-size: 16px;
+  animation: targetPulse 0.4s infinite alternate;
+}
+
+@keyframes targetPulse {
+  from { transform: scale(0.9); opacity: 0.7; }
+  to { transform: scale(1.15); opacity: 1; }
+}
+
+@keyframes inkDrop {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes drawCross {
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes fadeInDot {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Нижняя панель */
+.battle-footer {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.notebook-log {
+  flex: 1;
+  min-width: 280px;
+  padding: 10px 14px;
+}
+
+.log-title {
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.log-entries {
+  height: 52px;
+  overflow-y: auto;
+  background: #fafcfe;
+  border: 1px dashed #b8cde6;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.log-entry.hit {
+  color: var(--ink-red);
+  font-weight: 700;
+}
+
+.log-entry.sunk {
+  color: #b02a37;
+  font-weight: 700;
+}
+
+.log-entry.miss {
+  color: var(--pencil-lead);
+}
+
+.log-entry.system {
+  color: var(--ink-blue);
+  font-style: italic;
+}
+
+.notebook-reactions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 10px 14px;
+}
+
+.react-label {
+  font-family: 'Caveat', cursive;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.react-emojis {
+  display: flex;
+  gap: 4px;
+}
+
+.emoji-btn {
+  font-size: 18px;
+  padding: 4px 6px;
+}
+
+/* Модальное окно */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(14, 30, 60, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.diary-card {
+  background: #ffffff;
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius);
+  width: 90%;
+  max-width: 440px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 4px 6px 0px rgba(18, 57, 133, 0.25);
+  animation: popIn 0.3s ease;
+}
+
+.diary-icon {
+  font-size: 46px;
+  margin-bottom: 8px;
+}
+
+.diary-banner h2 {
+  font-family: 'Caveat', cursive;
+  font-size: 34px;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.diary-banner.victory h2 {
+  color: #087f5b;
+}
+
+.diary-banner.defeat h2 {
+  color: var(--ink-red);
+}
+
+.diary-banner p {
+  font-size: 15px;
+  color: var(--pencil-lead);
+  margin-bottom: 16px;
+}
+
+.diary-stats {
+  background: #f8fbff;
+  border: 1px dashed #b8cde6;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diary-stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+}
+
+.diary-stat-row strong {
+  font-family: 'Caveat', cursive;
+  font-size: 20px;
+  color: var(--ink-blue);
+}
+
+.rematch-note {
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  color: var(--ink-red);
+  margin-bottom: 12px;
+}
+
+.diary-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.reaction-toast-container {
+  position: fixed;
+  bottom: 60px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.reaction-note {
+  background: #ffffff;
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius);
+  box-shadow: 2px 2px 0px rgba(18, 57, 133, 0.2);
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: noteFloat 2.6s forwards ease-out;
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+}
+
+@keyframes noteFloat {
+  0% { opacity: 0; transform: translateY(10px); }
+  15% { opacity: 1; transform: translateY(0); }
+  75% { opacity: 1; transform: translateY(-15px); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
+@keyframes pulseDot {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 860px) {
+  :root {
+    --cell-size: 26px;
+  }
+  .notebook-sheet {
+    padding: 12px 14px 16px 28px;
+  }
+  .notebook-margin-line {
+    left: 20px;
+  }
+  .battle-spread {
+    flex-direction: column;
+    align-items: center;
+  }
+  .notebook-spine {
+    display: none;
+  }
+}
